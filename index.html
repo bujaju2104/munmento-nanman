@@ -50,6 +50,7 @@ var useState=React.useState,useCallback=React.useCallback,ce=React.createElement
 
 function hdrs(){return{"Content-Type":"application/json","apikey":SUPA_ANON,"Authorization":"Bearer "+SUPA_ANON};}
 function dbInsert(row){return fetch(SUPA_URL+"/rest/v1/"+TABLE,{method:"POST",headers:Object.assign({},hdrs(),{"Prefer":"return=representation"}),body:JSON.stringify(row)}).then(function(r){if(!r.ok)return r.json().then(function(e){throw new Error(e.message||"오류");});return r.json();});}
+function dbDelete(id){return fetch(SUPA_URL+"/rest/v1/"+TABLE+"?id=eq."+id,{method:"DELETE",headers:Object.assign({},hdrs(),{"Prefer":"return=representation"})}).then(function(r){if(!r.ok)return r.json().then(function(e){throw new Error(e.message||"오류");});return r.json();});}
 function dbSelect(){return fetch(SUPA_URL+"/rest/v1/"+TABLE+"?order=created_at.desc&limit=2000",{headers:hdrs()}).then(function(r){if(!r.ok)return r.json().then(function(e){throw new Error(e.message||"오류");});return r.json();});}
 
 var SESSIONS=[
@@ -164,6 +165,11 @@ function App(){
   var s11=useState([]),rows=s11[0],setRows=s11[1];
   var s12=useState(false),loading=s12[0],setLoading=s12[1];
   var s13=useState(""),aErr=s13[0],setAErr=s13[1];
+  var s17=useState(""),myPhone=s17[0],setMyPhone=s17[1];
+  var s18=useState([]),myRows=s18[0],setMyRows=s18[1];
+  var s19=useState(false),myLoading=s19[0],setMyLoading=s19[1];
+  var s20=useState(""),myErr=s20[0],setMyErr=s20[1];
+  var s21=useState(""),myMsg=s21[0],setMyMsg=s21[1];
   var s14=useState("all"),filt=s14[0],setFilt=s14[1];
   var s15=useState(""),srch=s15[0],setSrch=s15[1];
   var s16=useState({sid:"",sids:[],nick:"",phone:"",agree:false}),form=s16[0],setForm=s16[1];
@@ -225,7 +231,7 @@ function App(){
         ce("button",{onClick:function(){setShowPro(true);},style:{background:"#fdf8ec",border:"1px solid #f0e8cc",color:GOLD,borderRadius:10,padding:"6px 14px",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}},"프로필")
       ),
       ce("div",{style:{display:"flex",maxWidth:640,margin:"0 auto",padding:"0 4px",borderTop:"1px solid #f0f0f0"}},
-        [["home","🗓 일정"],["apply","✍️ 신청"],["admin","현황"]].map(function(t){
+        [["home","🗓 일정"],["apply","✍️ 신청"],["mypage","내 신청"],["admin","현황"]].map(function(t){
           return ce("button",{key:t[0],className:"tab"+(tab===t[0]?" on":""),onClick:function(){if(t[0]==="admin")openAdmin();else setTab(t[0]);}},t[1]);
         })
       )
@@ -376,6 +382,63 @@ function App(){
         ce("a",{href:KAKAO,target:"_blank",rel:"noopener noreferrer"},ce("button",{className:"btn-kakao"},"💬 카카오톡 오픈채팅 입장"))
       ),
 
+      /* 내 신청 */
+      tab==="mypage"&&ce("div",null,
+        ce("div",{style:{marginBottom:22}},
+          ce("div",{style:{fontSize:10,color:"#bbb",letterSpacing:3,fontWeight:700,marginBottom:4}},"MY BOOKING"),
+          ce("div",{style:{fontSize:26,fontWeight:900,color:"#111",letterSpacing:-0.5}},"내 신청 내역")
+        ),
+        ce("div",{style:{marginBottom:16}},
+          ce("label",{style:{display:"block",fontSize:13,fontWeight:800,color:"#111",marginBottom:8}},"전화번호로 조회"),
+          ce("div",{style:{display:"flex",gap:8}},
+            ce("input",{className:"fi",placeholder:"01012345678",value:myPhone,onChange:function(e){setMyPhone(e.target.value);},inputMode:"numeric",style:{flex:1}}),
+            ce("button",{onClick:function(){
+              if(!myPhone){setMyErr("전화번호를 입력해주세요.");return;}
+              setMyLoading(true);setMyErr("");setMyMsg("");
+              fetch(SUPA_URL+"/rest/v1/"+TABLE+"?phone=eq."+myPhone.replace(/[^0-9]/g,"")+"&order=created_at.desc",{headers:hdrs()})
+                .then(function(r){return r.json();})
+                .then(function(r){setMyRows(r);setMyLoading(false);if(r.length===0)setMyErr("신청 내역이 없어요.");})
+                .catch(function(e){setMyErr("조회 실패: "+e.message);setMyLoading(false);});
+            },style:{background:"#111",color:"#fff",border:"none",padding:"0 18px",borderRadius:12,cursor:"pointer",fontSize:14,fontWeight:700,fontFamily:"inherit",whiteSpace:"nowrap"}},"조회")
+          )
+        ),
+        myErr&&ce("div",{style:{background:"#fef2f2",border:"1px solid #fecaca",color:"#ef4444",borderRadius:10,padding:"10px 14px",fontSize:13,marginBottom:12}},myErr),
+        myMsg&&ce("div",{style:{background:"#f0fdf4",border:"1px solid #bbf7d0",color:"#16a34a",borderRadius:10,padding:"10px 14px",fontSize:13,marginBottom:12}},myMsg),
+        myLoading&&ce("div",{style:{textAlign:"center",padding:30,color:"#bbb"}},"조회 중..."),
+        myRows.length>0&&ce("div",null,
+          ce("div",{style:{fontSize:12,color:"#bbb",marginBottom:12}},myRows.length+"개의 신청 내역"),
+          myRows.map(function(r){
+            var s=SESSIONS.find(function(x){return x.id===r.session_id;})||{};
+            return ce("div",{key:r.id,style:{background:"#fff",border:"1px solid #eee",borderRadius:14,padding:"16px",marginBottom:10,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}},
+              ce("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}},
+                ce("div",null,
+                  ce("div",{style:{fontSize:15,fontWeight:800,color:"#111",marginBottom:4}},s.date||r.session_label),
+                  ce("div",{style:{display:"flex",alignItems:"center",gap:6}},
+                    ce("span",{style:{fontSize:11,fontWeight:700,padding:"2px 8px",borderRadius:5,background:s.type==="저녁임장"?"#fdf8ec":"#f0f0f0",color:s.type==="저녁임장"?GOLD:"#888"}},s.type||""),
+                    ce("span",{style:{fontSize:11,color:"#aaa"}},s.time||"")
+                  ),
+                  ce("div",{style:{fontSize:12,color:"#888",marginTop:4}},s.area||"")
+                ),
+                ce("button",{onClick:function(){
+                  if(!window.confirm("신청을 취소할까요?")){return;}
+                  dbDelete(r.id).then(function(){
+                    setMyRows(myRows.filter(function(x){return x.id!==r.id;}));
+                    setMyMsg("취소 완료됐어요.");
+                  }).catch(function(e){setMyErr("취소 실패: "+e.message);});
+                },style:{background:"#fef2f2",border:"1px solid #fecaca",color:"#ef4444",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"inherit"}},"취소")
+              ),
+              ce("div",{style:{fontSize:11,color:"#ccc",borderTop:"1px solid #f5f5f5",paddingTop:8}},"신청일: "+new Date(r.created_at).toLocaleString("ko-KR"))
+            );
+          }),
+          ce("div",{style:{background:"#f8f8f6",borderRadius:12,padding:"14px",marginTop:8}},
+            ce("div",{style:{fontSize:12,color:"#aaa",lineHeight:1.8}},"날짜 변경이 필요하시면",ce("br"),"취소 후 다시 신청하거나 카카오톡으로 문의해주세요."),
+            ce("a",{href:KAKAO,target:"_blank",rel:"noopener noreferrer"},
+              ce("button",{style:{width:"100%",marginTop:10,background:"#FEE500",color:"#3C1E1E",border:"none",padding:"12px",borderRadius:10,cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:6}},"💬 카카오톡 문의")
+            )
+          )
+        )
+      ),
+
       /* 관리자 */
       tab==="admin"&&authed&&ce("div",null,
         ce("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,flexWrap:"wrap",gap:8}},
@@ -406,7 +469,7 @@ function App(){
         filtered.length===0?ce("div",{style:{textAlign:"center",padding:36,color:"#ccc"}},"신청자가 없어요"):
         ce("div",{style:{overflowX:"auto",borderRadius:12,border:"1px solid #eee",background:"#fff",boxShadow:"0 2px 8px rgba(0,0,0,.04)"}},
           ce("table",{style:{width:"100%",borderCollapse:"collapse",fontSize:12}},
-            ce("thead",null,ce("tr",null,["#","닉네임","전화","날짜","지역","유형","일시"].map(function(h){return ce("th",{key:h,style:{background:"#f8f8f6",color:"#bbb",fontWeight:700,padding:"9px 10px",textAlign:"left",borderBottom:"1px solid #f0f0f0",whiteSpace:"nowrap"}},h);}))),
+            ce("thead",null,ce("tr",null,["#","닉네임","전화","날짜","지역","유형","일시","관리"].map(function(h){return ce("th",{key:h,style:{background:"#f8f8f6",color:"#bbb",fontWeight:700,padding:"9px 10px",textAlign:"left",borderBottom:"1px solid #f0f0f0",whiteSpace:"nowrap"}},h);}))),
             ce("tbody",null,filtered.map(function(r,i){
               var s=SESSIONS.find(function(x){return x.id===r.session_id;})||{};
               return ce("tr",{key:r.id,style:{borderBottom:"1px solid #fafafa"}},
