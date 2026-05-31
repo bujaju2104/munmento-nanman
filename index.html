@@ -50,7 +50,7 @@ var useState=React.useState,useCallback=React.useCallback,ce=React.createElement
 
 function hdrs(){return{"Content-Type":"application/json","apikey":SUPA_ANON,"Authorization":"Bearer "+SUPA_ANON};}
 function dbInsert(row){return fetch(SUPA_URL+"/rest/v1/"+TABLE,{method:"POST",headers:Object.assign({},hdrs(),{"Prefer":"return=representation"}),body:JSON.stringify(row)}).then(function(r){if(!r.ok)return r.json().then(function(e){throw new Error(e.message||"오류");});return r.json();});}
-function dbDelete(id){return fetch(SUPA_URL+"/rest/v1/"+TABLE+"?id=eq."+id,{method:"DELETE",headers:Object.assign({},hdrs(),{"Prefer":"return=representation"})}).then(function(r){if(!r.ok)return r.json().then(function(e){throw new Error(e.message||"오류");});return r.json();});}
+function dbCancel(id){return fetch(SUPA_URL+"/rest/v1/"+TABLE+"?id=eq."+id,{method:"PATCH",headers:Object.assign({},hdrs(),{"Prefer":"return=representation"}),body:JSON.stringify({status:"cancelled"})}).then(function(r){if(!r.ok)return r.json().then(function(e){throw new Error(e.message||"오류");});return r.json();});}
 function dbSelect(){return fetch(SUPA_URL+"/rest/v1/"+TABLE+"?order=created_at.desc&limit=2000",{headers:hdrs()}).then(function(r){if(!r.ok)return r.json().then(function(e){throw new Error(e.message||"오류");});return r.json();});}
 
 var SESSIONS=[
@@ -66,7 +66,7 @@ function Cover(p){
   return ce("div",{style:{minHeight:"100vh",background:"linear-gradient(160deg,#fffdf5 0%,#fff9e8 40%,#fff 100%)",display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"}},
     ce("div",{style:{position:"absolute",top:-60,right:-60,width:280,height:280,borderRadius:"50%",background:"radial-gradient(circle,rgba(201,168,76,.15) 0%,transparent 70%)",pointerEvents:"none"}}),
     ce("div",{style:{position:"absolute",bottom:100,left:-80,width:240,height:240,borderRadius:"50%",background:"radial-gradient(circle,rgba(201,168,76,.07) 0%,transparent 70%)",pointerEvents:"none"}}),
-    ce("div",{style:{padding:"44px 28px 0",flex:1}},
+    ce("div",{style:{padding:"40px 24px 0"}},
       ce("div",{style:{display:"inline-flex",alignItems:"center",gap:7,background:"rgba(201,168,76,.12)",border:"1px solid rgba(201,168,76,.25)",borderRadius:20,padding:"6px 16px",marginBottom:36}},
         ce("div",{style:{width:6,height:6,borderRadius:"50%",background:GOLD}}),
         ce("span",{style:{fontSize:11,fontWeight:700,color:"#a07830",letterSpacing:1.5}},"2026년 6월 임장 모집 중")
@@ -409,7 +409,7 @@ function App(){
           ce("div",{style:{fontSize:12,color:"#bbb",marginBottom:12}},myRows.length+"개의 신청 내역"),
           myRows.map(function(r){
             var s=SESSIONS.find(function(x){return x.id===r.session_id;})||{};
-            return ce("div",{key:r.id,style:{background:"#fff",border:"1px solid #eee",borderRadius:14,padding:"16px",marginBottom:10,boxShadow:"0 2px 8px rgba(0,0,0,.04)"}},
+            return ce("div",{key:r.id,style:{background:r.status==="cancelled"?"#fafafa":"#fff",border:"1px solid "+(r.status==="cancelled"?"#f0f0f0":"#eee"),borderRadius:14,padding:"16px",marginBottom:10,boxShadow:"0 2px 8px rgba(0,0,0,.04)",opacity:r.status==="cancelled"?0.7:1}},
               ce("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}},
                 ce("div",null,
                   ce("div",{style:{fontSize:15,fontWeight:800,color:"#111",marginBottom:4}},s.date||r.session_label),
@@ -451,7 +451,7 @@ function App(){
         ),
         aErr&&ce("div",{style:{background:"#fef2f2",border:"1px solid #fecaca",color:"#ef4444",borderRadius:10,padding:12,fontSize:13,marginBottom:12}},aErr),
         ce("div",{style:{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:18}},
-          [{l:"전체",v:rows.length},{l:"저녁임장",v:rows.filter(function(r){return r.session_id&&r.session_id.startsWith("e");}).length},{l:"반차임장",v:rows.filter(function(r){return r.session_id&&r.session_id.startsWith("a");}).length}].map(function(x){
+          [{l:"전체",v:rows.filter(function(r){return r.status!=="cancelled";}).length},{l:"저녁임장",v:rows.filter(function(r){return r.session_id&&r.session_id.startsWith("e")&&r.status!=="cancelled";}).length},{l:"반차임장",v:rows.filter(function(r){return r.session_id&&r.session_id.startsWith("a")&&r.status!=="cancelled";}).length}].map(function(x){
             return ce("div",{key:x.l,style:{background:"#fff",borderRadius:12,padding:"14px",textAlign:"center",border:"1px solid #eee"}},
               ce("div",{style:{fontSize:10,color:"#bbb",fontWeight:700,marginBottom:4}},x.l),
               ce("div",{style:{fontSize:26,fontWeight:900,color:"#111"}},x.v)
@@ -472,9 +472,14 @@ function App(){
             ce("thead",null,ce("tr",null,["#","닉네임","전화","날짜","지역","유형","일시","관리"].map(function(h){return ce("th",{key:h,style:{background:"#f8f8f6",color:"#bbb",fontWeight:700,padding:"9px 10px",textAlign:"left",borderBottom:"1px solid #f0f0f0",whiteSpace:"nowrap"}},h);}))),
             ce("tbody",null,filtered.map(function(r,i){
               var s=SESSIONS.find(function(x){return x.id===r.session_id;})||{};
-              return ce("tr",{key:r.id,style:{borderBottom:"1px solid #fafafa"}},
+              return ce("tr",{key:r.id,style:{borderBottom:"1px solid #fafafa",background:r.status==="cancelled"?"#fafafa":"#fff",opacity:r.status==="cancelled"?0.6:1}},
                 ce("td",{style:{padding:"9px 10px",color:"#ccc"}},filtered.length-i),
-                ce("td",{style:{padding:"9px 10px",fontWeight:700,color:"#111"}},r.nickname),
+                ce("td",{style:{padding:"9px 10px"}},
+                  ce("div",{style:{display:"flex",alignItems:"center",gap:5}},
+                    ce("span",{style:{fontWeight:700,color:r.status==="cancelled"?"#bbb":"#111",textDecoration:r.status==="cancelled"?"line-through":"none"}},r.nickname),
+                    r.status==="cancelled"&&ce("span",{style:{fontSize:10,background:"#f5f5f5",color:"#bbb",borderRadius:4,padding:"1px 5px",fontWeight:700}},"취소")
+                  )
+                ),
                 ce("td",{style:{padding:"9px 10px"}},ce("a",{href:"tel:"+r.phone,style:{color:GOLD,fontWeight:600,textDecoration:"none"}},r.phone)),
                 ce("td",{style:{padding:"9px 10px",fontWeight:700,color:"#111",fontSize:11,whiteSpace:"nowrap"}},s.date||""),
                 ce("td",{style:{padding:"9px 10px",color:"#888",fontSize:11}},s.area||""),
