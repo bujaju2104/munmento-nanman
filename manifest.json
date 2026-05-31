@@ -1,0 +1,15 @@
+{
+  "name": "문멘토 낭만임장",
+  "short_name": "낭만임장",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#c9a84c",
+  "icons": [
+    {
+      "src": "https://munmento-nanman.vercel.app/favicon.ico",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
