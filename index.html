@@ -63,30 +63,29 @@ var SESSIONS=[
 
 /* 커버 */
 function Cover(p){
-  return ce("div",{style:{minHeight:"100vh",background:"linear-gradient(160deg,#fffdf5 0%,#fff9e8 40%,#fff 100%)",display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"}},
-    ce("div",{style:{position:"absolute",top:-60,right:-60,width:280,height:280,borderRadius:"50%",background:"radial-gradient(circle,rgba(201,168,76,.15) 0%,transparent 70%)",pointerEvents:"none"}}),
-    ce("div",{style:{position:"absolute",bottom:100,left:-80,width:240,height:240,borderRadius:"50%",background:"radial-gradient(circle,rgba(201,168,76,.07) 0%,transparent 70%)",pointerEvents:"none"}}),
-    ce("div",{style:{padding:"40px 24px 0"}},
-      ce("div",{style:{display:"inline-flex",alignItems:"center",gap:7,background:"rgba(201,168,76,.12)",border:"1px solid rgba(201,168,76,.25)",borderRadius:20,padding:"6px 16px",marginBottom:36}},
-        ce("div",{style:{width:6,height:6,borderRadius:"50%",background:GOLD}}),
-        ce("span",{style:{fontSize:11,fontWeight:700,color:"#a07830",letterSpacing:1.5}},"2026년 6월 임장 모집 중")
-      ),
-      ce("div",{style:{fontSize:12,color:"#c8a86a",letterSpacing:2,fontWeight:700,marginBottom:12}},"문멘토 부동산 임장클럽"),
-      ce("h1",{style:{fontSize:44,fontWeight:900,color:"#1a1a1a",lineHeight:1.05,letterSpacing:-2,marginBottom:8}},"문멘토",ce("br"),ce("span",{style:{color:GOLD}},"낭만임장")),
-      ce("div",{style:{width:40,height:3,background:"linear-gradient(90deg,"+GOLD+",transparent)",borderRadius:2,marginBottom:20}}),
-      ce("p",{style:{fontSize:15,color:"#888",lineHeight:1.8,marginBottom:20}},"현장에 답이 있고",ce("br"),"숫자로 가치를 증명합니다")
-    ),
-    ce("div",{style:{padding:"0 22px 24px"}},
-      ce("div",{style:{background:"rgba(255,255,255,.8)",backdropFilter:"blur(8px)",borderRadius:20,padding:"14px 18px",marginBottom:12,border:"1px solid rgba(201,168,76,.2)",boxShadow:"0 4px 20px rgba(201,168,76,.1)"}},
-        ce("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}},
-          ce("div",{style:{fontSize:11,color:GOLD,fontWeight:800,letterSpacing:1}},"6월 임장"),
-          ce("div",{style:{fontSize:11,color:"#bbb"}},"총 5회")
-        ),
-        ce("div",{style:{fontSize:20,fontWeight:900,color:"#1a1a1a",marginBottom:4}},"저녁임장 4회 · 반차임장 1회"),
-        ce("div",{style:{fontSize:12,color:"#aaa"}}),"매주 목요일 · 6월 4일 ~ 25일",
+  return ce("div",{style:{minHeight:"100vh",background:"linear-gradient(170deg,#fffdf5 0%,#fff9e8 50%,#fdf6e3 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"space-between",overflow:"hidden",position:"relative",padding:"0 24px"}},
+    ce("div",{style:{position:"absolute",top:-80,right:-80,width:320,height:320,borderRadius:"50%",background:"radial-gradient(circle,rgba(201,168,76,.12) 0%,transparent 70%)",pointerEvents:"none"}}),
+    ce("div",{style:{position:"absolute",bottom:60,left:-80,width:260,height:260,borderRadius:"50%",background:"radial-gradient(circle,rgba(201,168,76,.07) 0%,transparent 70%)",pointerEvents:"none"}}),
 
+    ce("div",{style:{textAlign:"center",paddingTop:56,width:"100%"}},
+      ce("div",{style:{fontSize:11,color:"#c8a86a",letterSpacing:4,fontWeight:700,marginBottom:32}},"MUNMENTOR ROMANTIC IMJANG"),
+      ce("h1",{style:{fontSize:52,fontWeight:900,color:"#1a1a1a",lineHeight:1.0,letterSpacing:-2,marginBottom:4,textAlign:"center"}},"문멘토"),
+      ce("h1",{style:{fontSize:52,fontWeight:900,color:GOLD,lineHeight:1.0,letterSpacing:-2,marginBottom:28,textAlign:"center"}},"낭만임장"),
+      ce("p",{style:{fontSize:16,color:"#999",lineHeight:2,marginBottom:28,textAlign:"center"}},"현장에 답이 있고",ce("br"),"숫자로 가치를 증명합니다"),
+      ce("div",{style:{display:"flex",justifyContent:"center",gap:8,flexWrap:"wrap",marginBottom:0}},
+        ["공인중개사","20년 경력","부동산 전문"].map(function(b){
+          return ce("span",{key:b,style:{background:"rgba(255,255,255,.7)",border:"1.5px solid rgba(201,168,76,.3)",borderRadius:24,padding:"7px 18px",fontSize:13,fontWeight:700,color:"#a07830"}},b);
+        })
+      )
+    ),
+
+    ce("div",{style:{width:"100%",paddingBottom:36}},
+      ce("div",{style:{background:"rgba(255,255,255,.75)",backdropFilter:"blur(8px)",borderRadius:20,padding:"18px 20px",marginBottom:14,border:"1px solid rgba(201,168,76,.2)",boxShadow:"0 4px 20px rgba(201,168,76,.1)"}},
+        ce("div",{style:{fontSize:10,color:"#bbb",letterSpacing:2,fontWeight:700,marginBottom:6,textAlign:"center"}},"THIS MONTH"),
+        ce("div",{style:{fontSize:22,fontWeight:900,color:"#1a1a1a",textAlign:"center",marginBottom:4}},"6월 임장 일정"),
+        ce("div",{style:{fontSize:13,color:"#aaa",textAlign:"center"}},"저녁임장 4회 · 반차임장 1회")
       ),
-      ce("button",{className:"btn-gold",onClick:p.go},"6월 임장 신청하기 →")
+      ce("button",{className:"btn-gold",onClick:p.go,style:{fontSize:15,padding:"16px"}},"임장 신청하기 →")
     )
   );
 }
@@ -379,7 +378,7 @@ function App(){
             ce("div",null,"📌 입금자명: ",ce("span",{style:{fontWeight:800}},form.nick))
           )
         ),
-        ce("a",{href:KAKAO,target:"_blank",rel:"noopener noreferrer"},ce("button",{className:"btn-kakao"},"💬 카카오톡 오픈채팅 입장"))
+        ce("a",{href:KAKAO,target:"_blank",rel:"noopener noreferrer"},ce("button",{className:"btn-kakao"},"💬 카카오톡 문의하기"))
       ),
 
       /* 내 신청 */
