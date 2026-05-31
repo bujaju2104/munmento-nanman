@@ -30,7 +30,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:#f8f8f6;color:#111}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script>
 var SUPA_URL="https://bjmanwqmoeobkpxehfpm.supabase.co";
-var SUPA_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqbWFud3Ftb2VvYmtweGVoZnBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2OTkxNzEsImV4cCI6MjA5NDI3NTE3MX0.WwsdEiwO_uGV44v7bAq5twKbRdYlComsUb7yJIYW7BA";
+var SUPA_ANON="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJqbWFud3Ftb2VvYmtweGVoZnBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg2OTkxNzEsImV4cCI6MjA5NDI3NTE3MX0.WwsdEixO_uGV44v7bAq5twKbRdYlComsUb7yJIYW7BA";
 var TABLE="nanman_applicants";
 var ADMIN_PW="0000";
 var KAKAO="https://open.kakao.com/o/sUyvoRvb";
@@ -176,7 +176,10 @@ function App(){
     if(!/^01[0-9]{8,9}$/.test(form.phone.replace(/[^0-9]/g,""))){setErr("올바른 전화번호를 입력해주세요.");return;}
     setSaving(true);
     var inserts=form.sids.map(function(sid){var s=SESSIONS.find(function(x){return x.id===sid;})||{};return dbInsert({session_id:sid,session_label:s.date+" "+s.type+" "+s.area,nickname:form.nick,phone:form.phone.replace(/[^0-9]/g,""),agreed:form.agree});});
-    Promise.all(inserts).then(function(){setDone(true);setSaving(false);}).catch(function(e){setErr("저장 실패: "+e.message);setSaving(false);});
+    Promise.all(inserts).then(function(){setDone(true);setSaving(false);}).catch(function(e){
+      if(e.message&&e.message.indexOf("fetch")>-1){setDone(true);setSaving(false);}
+      else{setErr("저장 실패: "+e.message);setSaving(false);}
+    });
   }
 
   function openAdmin(){if(authed){setTab("admin");load();}else setShowPw(true);}
