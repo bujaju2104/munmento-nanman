@@ -418,13 +418,15 @@ function App(){
                   ),
                   ce("div",{style:{fontSize:12,color:"#888",marginTop:4}},s.area||"")
                 ),
-                ce("button",{onClick:function(){
-                  if(!window.confirm("신청을 취소할까요?")){return;}
-                  dbDelete(r.id).then(function(){
-                    setMyRows(myRows.filter(function(x){return x.id!==r.id;}));
-                    setMyMsg("취소 완료됐어요.");
-                  }).catch(function(e){setMyErr("취소 실패: "+e.message);});
-                },style:{background:"#fef2f2",border:"1px solid #fecaca",color:"#ef4444",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"inherit"}},"취소")
+                r.status==="cancelled"
+                  ? ce("span",{style:{fontSize:11,fontWeight:700,color:"#bbb",background:"#f5f5f5",borderRadius:8,padding:"6px 10px"}},"취소됨")
+                  : ce("button",{onClick:function(){
+                      if(!window.confirm("신청을 취소할까요?")){return;}
+                      dbCancel(r.id).then(function(){
+                        setMyRows(myRows.map(function(x){return x.id===r.id?Object.assign({},x,{status:"cancelled"}):x;}));
+                        setMyMsg("취소 완료됐어요. 기록은 유지됩니다.");
+                      }).catch(function(e){setMyErr("취소 실패: "+e.message);});
+                    },style:{background:"#fef2f2",border:"1px solid #fecaca",color:"#ef4444",borderRadius:8,padding:"6px 12px",cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"inherit"}},"취소")
               ),
               ce("div",{style:{fontSize:11,color:"#ccc",borderTop:"1px solid #f5f5f5",paddingTop:8}},"신청일: "+new Date(r.created_at).toLocaleString("ko-KR"))
             );
@@ -483,7 +485,24 @@ function App(){
                 ce("td",{style:{padding:"9px 10px",fontWeight:700,color:"#111",fontSize:11,whiteSpace:"nowrap"}},s.date||""),
                 ce("td",{style:{padding:"9px 10px",color:"#888",fontSize:11}},s.area||""),
                 ce("td",{style:{padding:"9px 10px"}},ce("span",{style:{background:s.type==="저녁임장"?"#fdf8ec":"#f5f5f5",color:s.type==="저녁임장"?GOLD:"#888",padding:"2px 7px",borderRadius:5,fontSize:10,fontWeight:700}},s.type||"")),
-                ce("td",{style:{padding:"9px 10px",color:"#bbb",fontSize:10,whiteSpace:"nowrap"}},new Date(r.created_at).toLocaleDateString("ko-KR"),ce("br"),new Date(r.created_at).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"}))
+                ce("td",{style:{padding:"9px 10px",color:"#bbb",fontSize:10,whiteSpace:"nowrap"}},new Date(r.created_at).toLocaleDateString("ko-KR"),ce("br"),new Date(r.created_at).toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit"})),
+              ce("td",{style:{padding:"9px 10px",whiteSpace:"nowrap"}},
+                ce("div",{style:{display:"flex",gap:5,alignItems:"center"}},
+                  ce("select",{
+                    value:r.session_id||"",
+                    onChange:function(e){
+                      var ns=SESSIONS.find(function(x){return x.id===e.target.value;})||{};
+                      fetch(SUPA_URL+"/rest/v1/"+TABLE+"?id=eq."+r.id,{method:"PATCH",headers:Object.assign({},hdrs(),{"Prefer":"return=representation"}),body:JSON.stringify({session_id:e.target.value,session_label:ns.date+" "+ns.type+" "+ns.area})}).then(function(){load();}).catch(function(e2){alert("변경실패:"+e2.message);});
+                    },
+                    style:{background:"#f8f8f6",border:"1px solid #eee",borderRadius:6,padding:"4px 4px",fontSize:10,color:"#111",cursor:"pointer",fontFamily:"inherit",maxWidth:90}
+                  },
+                    SESSIONS.map(function(ss){return ce("option",{key:ss.id,value:ss.id},ss.date.replace("6월 ","").replace("일(목)","일")+" "+ss.type.replace("임장",""));})
+                  ),
+                  r.status==="cancelled"
+                    ? ce("button",{onClick:function(){fetch(SUPA_URL+"/rest/v1/"+TABLE+"?id=eq."+r.id,{method:"PATCH",headers:Object.assign({},hdrs(),{"Prefer":"return=representation"}),body:JSON.stringify({status:"active"})}).then(function(){load();}).catch(function(e2){alert("복구실패");});},style:{background:"#f0fdf4",border:"1px solid #bbf7d0",color:"#16a34a",borderRadius:6,padding:"4px 7px",cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}},"복구")
+                    : ce("button",{onClick:function(){if(!window.confirm(r.nickname+"님 취소?"))return;dbCancel(r.id).then(function(){load();}).catch(function(e2){alert("실패");});},style:{background:"#fef2f2",border:"1px solid #fecaca",color:"#ef4444",borderRadius:6,padding:"4px 7px",cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit"}},"취소")
+                )
+              )
               );
             }))
           )
